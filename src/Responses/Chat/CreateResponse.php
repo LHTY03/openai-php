@@ -48,6 +48,8 @@ final class CreateResponse implements ResponseContract, ResponseHasMetaInformati
         $choices = array_map(fn (array $result): CreateResponseChoice => CreateResponseChoice::from(
             $result
         ), $attributes['choices']);
+                
+        $attributes['id'] = $attributes['id'] ?? "NA";
 
         return new self(
             $attributes['id'],

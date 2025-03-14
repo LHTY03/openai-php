@@ -16,8 +16,19 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpClient\Psr18Client;
 
+
 final class Factory
 {
+    
+    private ?array $uri_map = [
+        'default' => 'api.openai.com/v1',
+        'x.ai' => 'https://api.x.ai/v1',
+        'grok' => 'https://api.x.ai/v1',
+        'gemini' => 'https://generativelanguage.googleapis.com/v1beta/openai',
+        'perplexity' => 'https://api.perplexity.ai',
+        'sonar' => 'https://api.perplexity.ai'
+    ];
+    
     /**
      * The API key for the requests.
      */
@@ -91,6 +102,12 @@ final class Factory
      */
     public function withProject(?string $project): self
     {
+        if ($project === null) {
+            $this->project = null;
+            return $this;
+        }
+        
+        $project = strtolower(preg_replace('/[^a-zA-Z]/', '', $project));
         $this->project = $project;
 
         return $this;
@@ -101,6 +118,12 @@ final class Factory
      */
     public function withProvider(?string $project): self
     {
+        if ($project === null) {
+            $this->provider = null;
+            return $this;
+        }
+        
+        $project = strtolower(preg_replace('/[^a-zA-Z]/', '', $project));
         $this->provider = $project;
 
         return $this;
@@ -184,17 +207,12 @@ final class Factory
             $headers = $headers->withCustomHeader($name, $value);
         }
 
-        if ($this->provider !== null) {
-            if($this->provider == 'Grok' || $this->provider == 'grok'|| $this->provider == 'GROK'){
-                $baseUri = BaseUri::from($this->baseUri ?: 'api.openai.com/v1');
-            }
-
+        if (is_array($this->uri_map) && array_key_exists($this->provider, $this->uri_map)) {
+            $baseUri = BaseUri::from($this->uri_map[$this->provider]);
         } else {
-            $baseUri = BaseUri::from($this->baseUri ?: 'https://api.x.ai/v1');
+            $baseUri = BaseUri::from($this->baseUri ?: 'api.openai.com/v1');
         }
-
-
-
+        
         $queryParams = QueryParams::create();
         foreach ($this->queryParams as $name => $value) {
             $queryParams = $queryParams->withParam($name, $value);

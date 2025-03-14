@@ -43,6 +43,8 @@ final class CreateResponse implements ResponseContract, ResponseHasMetaInformati
         $results = array_map(fn (array $result): CreateResponseData => CreateResponseData::from(
             $result
         ), $attributes['data']);
+        
+        $attributes['created'] = $attributes['created'] ?? 0;
 
         return new self(
             $attributes['created'],
