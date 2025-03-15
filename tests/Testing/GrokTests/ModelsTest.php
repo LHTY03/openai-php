@@ -26,7 +26,7 @@ it('returns a list of models', function () {
 
 it('retreives a models attributes', function () {
     $client = OpenAI::factory()
-        ->withApiKey('xai-yoOhU8tYaS6wqm0b8lYhIe4MpVWhosbEviYiaWiD9aKq5eDsDfBaO43Y3zSGDwUtdu7KlET6XEel5bzY')
+        ->withApiKey('')
         ->withOrganization('brainiest-testing')
         ->withProvider('grok')
         ->withProject('brainiest-testing')

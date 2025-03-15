@@ -4,9 +4,11 @@ use OpenAI\Resources\Chat\CreateResponse;
 use OpenAI\Factory;
 use OpenAI\Client;
 
+$apikey=getenv('GROK_API_KEY');
+
 it('returns a response', function () {
     $client = OpenAI::factory()
-        ->withApiKey('xai-yoOhU8tYaS6wqm0b8lYhIe4MpVWhosbEviYiaWiD9aKq5eDsDfBaO43Y3zSGDwUtdu7KlET6XEel5bzY')
+        ->withApiKey(GROK_API_KEY)
         ->withOrganization('brainiest-testing')
         ->withProvider('grok')
         ->withProject('brainiest-testing')
@@ -28,7 +30,7 @@ it('returns a response', function () {
 
 it('accepts a system role message and returns a response', function () {
     $client = OpenAI::factory()
-        ->withApiKey('')
+        ->withApiKey(GROK_API_KEY)
         ->withOrganization('brainiest-testing')
         ->withProvider('grok')
         ->withProject('brainiest-testing')
@@ -46,5 +48,30 @@ it('accepts a system role message and returns a response', function () {
     #expect($result)->toBeInstanceOf(CreateResponse::class);
     
     #expect the response to be not empty
+    expect($result['choices'][0]['message']['role'])->toBe('assistant');
     expect($result['choices'][0]['message']['content'])->not->toBeEmpty();
+});
+
+it('returns a streamed chat response', function () {
+    $client = OpenAI::factory()
+        ->withApiKey(GROK_API_KEY)
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+        
+    $stream = $client->chat()->createStreamed([
+            'model' => 'grok-2-latest',
+            'messages' => [
+                ['role' => 'user', 'content' => 'Hello!'],
+            ],
+    ]);
+        
+    foreach($stream as $response){
+        $arr = $response->choices[0]->toArray();       
+        expect($arr['index'])->toBeInt();
+        expect($arr['delta']['content'])->toBeString();
+        expect($arr['delta']['role'])->toBe('assistant');
+    }
+    
 });
