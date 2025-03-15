@@ -8,3 +8,5 @@
 *.swo
 playground/*
 .idea
+.env
+*/apikey.php
