@@ -1,5 +1,5 @@
 {
-    "name": "openai-php/client",
+    "name": "lhty03/openai-php",
     "description": "OpenAI PHP is a supercharged PHP API client that allows you to interact with the Open AI API",
     "keywords": ["php", "openai", "sdk", "codex", "GPT-3", "DALL-E", "api", "client", "natural", "language", "processing"],
     "license": "MIT",
@@ -21,6 +21,12 @@
         "psr/http-factory-implementation": "*",
         "psr/http-message": "^1.1.0|^2.0.0"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/LHTY03/openai-php"
+        }
+    ],
     "require-dev": {
         "guzzlehttp/guzzle": "^7.9.2",
         "guzzlehttp/psr7": "^2.7.0",
