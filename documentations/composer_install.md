@@ -39,10 +39,10 @@ $result = $client->chat()->create([
     'messages' => [
         ['role' => 'user', 'content' => 'Hello!, who are you'],
     ],
-]);
+]);  
 
 echo $result->choices[0]->message->content;
-```
+```  
 
 Notice how the format is the exact same to the format of calling the **openai-php/client** library, but what we
 implemented is integrating the different models to a factory function that implemented a default url for each provider.
