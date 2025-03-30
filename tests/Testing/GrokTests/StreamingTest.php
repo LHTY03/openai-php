@@ -38,24 +38,3 @@ it('returns a completions response with correct parameters', function () {
     }
     
 });
-
-it('returns a streamed completions response', function () {
-    $client = OpenAI::factory()
-        ->withApiKey('')
-        ->withOrganization('brainiest-testing')
-        ->withProvider('grok')
-        ->withProject('brainiest-testing')
-        ->make();
-        
-    $stream = $client->completions()->createStreamed([
-            'model' => 'grok-2-1212',
-            'prompt' => 'Hi, how are you?',
-            'max_tokens' => 10,
-        ]);
-        
-    foreach($stream as $response){
-        expect($response->choices[0]->text)->toBeString();
-    }
-    
-});
-

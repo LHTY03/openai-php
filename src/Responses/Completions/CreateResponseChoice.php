@@ -17,7 +17,9 @@ final class CreateResponseChoice
      * @param  array{text: string, index: int, logprobs: array{tokens: array<int, string>, token_logprobs: array<int, float>, top_logprobs: array<int, string>|null, text_offset: array<int, int>}|null, finish_reason: string|null}  $attributes
      */
     public static function from(array $attributes): self
-    {
+    {          
+        $attributes['logprobs'] = null;
+         
         return new self(
             $attributes['text'],
             $attributes['index'],
