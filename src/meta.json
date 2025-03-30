@@ -1,0 +1,36 @@
+{
+    "chat_completion": {
+      "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"],
+      "grok": ["grok-1", "grok-1.5", "grok-2", "grok-2-latest"],
+      "perplexity": ["pplx-7b-chat", "pplx-70b-chat", "pplx-7b-online", "pplx-70b-online"],
+      "gemini": ["gemini-1.0-pro", "gemini-1.5-pro", "gemini-1.5-flash"]
+    },
+    "image_generation": {
+      "openai": ["dall-e-2", "dall-e-3"],
+      "stabilityai": ["stable-diffusion-v1.5", "stable-diffusion-2.1", "stable-diffusion-xl", "stable-diffusion-xl-turbo"],
+      "perplexity": [],
+      "gemini": ["imagen-2"]
+    },
+    "audio_transcription": {
+      "openai": ["whisper-1"],
+      "perplexity": [],
+      "grok": [],
+      "stabilityai": [],
+      "gemini": []
+    },
+    "audio_generation": {
+      "openai": [],
+      "stabilityai": [],
+      "perplexity": [],
+      "grok": [],
+      "gemini": []
+    },
+    "text_embedding": {
+      "openai": ["text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"],
+      "perplexity": [],
+      "grok": [],
+      "stabilityai": [],
+      "gemini": []
+    }
+  }
+  
