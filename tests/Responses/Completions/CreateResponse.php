@@ -19,7 +19,7 @@ test('from', function () {
         ->usage->toBeInstanceOf(CreateResponseUsage::class)
         ->meta()->toBeInstanceOf(MetaInformation::class);
 });
-
+//Testing 
 test('as array accessible', function () {
     $completion = CreateResponse::from(completion(), meta());
 
@@ -67,4 +67,29 @@ test('fake can not add inexistent properties', function () {
     expect($response)
         ->id->toBe('cmpl-1234')
         ->something->toBeNull();
+});
+
+test('from with empty data array', function () {
+    $response = CreateResponse::from([], meta());
+
+    expect($response->id)->toBeNull()
+        ->and($response->choices)->toBe([])
+        ->and($response->usage)->toBeNull();
+});
+
+test('from with null fields', function () {
+    $data = [
+        'id' => null,
+        'object' => null,
+        'created' => null,
+        'model' => null,
+        'choices' => null,
+        'usage' => null,
+    ];
+
+    $response = CreateResponse::from($data, meta());
+
+    expect($response->id)->toBeNull()
+        ->and($response->choices)->toBe([])
+        ->and($response->usage)->toBeNull();
 });
