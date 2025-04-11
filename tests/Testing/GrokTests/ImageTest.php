@@ -58,3 +58,18 @@ it("returns an image in url format", function () {
 
     #$response->toArray(); // ['created' => 1589478378, data => ['url' => 'https://oaidalleapiprodscus...', ...]]
 });
+
+it("handles multiple images correctly", function () {
+    $client = OpenAI::factory()
+        ->withApiKey("")
+        ->withOrganization("brainiest-testing")
+        ->withProvider("grok")
+        ->withProject("brainiest-testing")
+        ->make();
+
+    $response = $client->images()->create([
+        "model" => "grok-2-image",
+        "prompt" => "A fantasy landscape with dragons",
+        "n" => 3,
+        "response_format" => "url",
+    ]);
