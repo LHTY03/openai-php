@@ -77,7 +77,7 @@ $client = OpenAI::factory()
     ->withProvider('grok') // Could be Grok, grok, GROK, but anything else would be set to openai
     ->make();
 ```
-Now this sets the default baseURL to Grok's baseURL, and instead of taking away the function that allows
+Now this sets the default baseURL to Grok‘s baseURL, and instead of taking away the function that allows
 users to set upon their own url, this is just a quick fix that allows people to simply click in and change
 the provider easily.
 
@@ -109,9 +109,48 @@ integrating Gemini and it would still require some work of progress.
 
 ## Perplexity:
 
+### General View over the API
+The Official documentation of Perplexity is the following:
+https://docs.perplexity.ai/home
+
+Perplexity is completely compatible when we are call perplexity through the openai library.
+we would not have to do much to make perplexity compatible to openai-php library.
+The official documentation states that perplexity is compatible, so all we have to change is simple,
+which is making the call of the api easier. The below are the code that we tests which works
+for calling the perplexity api:
+
+```php
+$client = OpenAI::factory()
+    ->withApiKey($_ENV["PERPLEXITY_API_KEY"])
+    ->withOrganization('Brainiest')
+    ->withProject('RCOS_Brainiest')
+    ->withProvider('perplexity')
+    ->make();
+
+$response = $client->chat()->create([
+    'model' => 'sonar-pro',
+    'messages' => [
+        ['role' => 'user', 'content' => 'What is RCOS'],
+    ],
+]);
+
+echo $response->choices[0]->message->content;
+```
+Since Perplexity official documents only display chat completion function on the api document, we could not
+add in other functions such as image generation and function calling. In the future when we work on this project, 
+we would love to add in more function such as image generation.
 
 
+## New Features
 
+Additional Functions that we added except for other LLMs supports mostly lay in two fields, additional provider
+field when creating the client and usage tracking. 
+
+### Provider Field
+We initialized a field when creating the client for the LLM models, this withProvider function would allow the users
+that does now know the exact LLM api address to call the different LLM models that we provide support easier. With
+a simple call of the withProvider function, the user can call LLMs that we provide initial support to (Grok, Gemini
+, Perplexity) easily without making more research on each LLMs documentation.
 
 
 
