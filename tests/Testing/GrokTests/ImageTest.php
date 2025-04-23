@@ -4,6 +4,7 @@ use OpenAI\Responses\Images\CreateResponse;
 use OpenAI\Resources\Images;
 use OpenAI\Factory;
 use OpenAI\Client;
+use OpenAI\Exceptions\InvalidArgumentException;
 
 it("returns an image in b64 json format", function () {
     $client = OpenAI::factory()
@@ -75,7 +76,6 @@ it("handles multiple images correctly", function () {
     ]);
 })
 //edge case test
-use OpenAI\Exceptions\InvalidArgumentException;
 
 it("throws an exception for an unsupported response_format", function () {
     $client = OpenAI::factory()
@@ -91,6 +91,24 @@ it("throws an exception for an unsupported response_format", function () {
             "prompt"          => "Edge case test",
             "n"               => 1,
             "response_format" => "unsupported_format",
+        ]);
+    })->toThrow(InvalidArgumentException::class);
+});
+
+
+// edge case: no messages array provided
+it("throws an exception when messages parameter is missing", function () {
+    $client = OpenAI::factory()
+        ->withApiKey("")
+        ->withOrganization("brainiest-testing")
+        ->withProvider("grok")
+        ->withProject("brainiest-testing")
+        ->make();
+
+    expect(function () use ($client) {
+        $client->chat()->create([
+            "model" => "gpt-4o",
+            // missing "messages" key entirely
         ]);
     })->toThrow(InvalidArgumentException::class);
 });
