@@ -3,6 +3,8 @@
 use OpenAI\Resources\Models;
 use OpenAI\Factory;
 use OpenAI\Client;
+use OpenAI\Exceptions\InvalidArgumentException;
+
 
 it('returns a list of models', function () {
     $client = OpenAI::factory()
@@ -46,4 +48,22 @@ it('retreives a models attributes', function () {
     expect($response->created)->not->toBeEmpty();
     expect($response->ownedBy)->toBe('xai');   
 });
+<?php
+
+
+// Edge case: retrieving a model using a non‐string ID type
+it("throws an exception when retrieving a model with a non‐string ID", function () {
+    $client = OpenAI::factory()
+        ->withApiKey('')
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+
+    // passing an integer instead of a string
+    expect(function () use ($client) {
+        $client->models()->retrieve(12345);
+    })->toThrow(InvalidArgumentException::class);
+});
+
 
