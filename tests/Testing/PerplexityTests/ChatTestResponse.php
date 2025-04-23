@@ -57,15 +57,32 @@
 
 
     test('response object property is chat.completion', function () {
-        $client = makeClient();
-        $response = $client->chat()->create([
-            'model'    => 'perplexity/gpt-4',
-            'messages' => [
-                ['role' => 'user', 'content' => 'Hello!'],
-            ],
-        ]);
-    
-        // Ensure the API labelled this correctly
-        expect($response->object)->toBe('chat.completion');
-    });
+    $client = makeClient();
+    $response = $client->chat()->create([
+        'model'    => 'perplexity/gpt-4',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Hello!'],
+        ],
+    ]);
+
+    // Ensure the API labelled this correctly
+    expect($response->object)->toBe('chat.completion');
+});
+
+
+test('accepts sampling parameters temperature and top_p', function () {
+    $client = makeClient();
+    $response = $client->chat()->create([
+        'model'       => 'perplexity/gpt-4',
+        'messages'    => [
+            ['role' => 'user', 'content' => 'What is the capital of France?'],
+        ],
+        'temperature' => 0.7,
+        'top_p'       => 0.9,
+    ]);
+
+    expect($response)->toBeInstanceOf(CreateResponse::class);
+    // The content should still be present
+    expect(isset($response->choices[0]->message->content))->toBeTrue();
+});
 
