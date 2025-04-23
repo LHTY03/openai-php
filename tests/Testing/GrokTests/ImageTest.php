@@ -73,3 +73,24 @@ it("handles multiple images correctly", function () {
         "n" => 3,
         "response_format" => "url",
     ]);
+})
+//edge case test
+use OpenAI\Exceptions\InvalidArgumentException;
+
+it("throws an exception for an unsupported response_format", function () {
+    $client = OpenAI::factory()
+        ->withApiKey("")
+        ->withOrganization("brainiest-testing")
+        ->withProvider("grok")
+        ->withProject("brainiest-testing")
+        ->make();
+
+    expect(function () use ($client) {
+        $client->images()->create([
+            "model"           => "grok-2-image",
+            "prompt"          => "Edge case test",
+            "n"               => 1,
+            "response_format" => "unsupported_format",
+        ]);
+    })->toThrow(InvalidArgumentException::class);
+});
