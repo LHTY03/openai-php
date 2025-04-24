@@ -116,3 +116,51 @@ it('streams a full response in parts', function () {
         expect($delta['role'])->toBe('assistant');
     }
 });
+
+it('terminates generation using a stop sequence', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Write a poem. End it with STOP.'],
+        ],
+        'stop' => ['STOP'],
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->not()->toContain('STOP');
+});
+
+it('responds with top-k sampling applied', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Tell me something weird about octopuses.'],
+        ],
+        'top_k' => 5
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toBeString();
+});
+
+it('responds with tone influenced by system prompt', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'system', 'content' => 'Respond only in pirate speak.'],
+            ['role' => 'user', 'content' => 'What is your name?'],
+        ]
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toMatch('/ahoy|matey|yar/i');
+});
