@@ -59,3 +59,52 @@ it('returns a streamed completions response', function () {
     
 });
 
+it('throws an exception when model is invalid', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('')
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+    
+    expect(function () use ($client) {
+        $client->completions()->create([
+            'model' => 'non-existent-model',
+            'prompt' => 'Test prompt',
+            'max_tokens' => 100
+        ]);
+    })->toThrow(\Exception::class);
+});
+
+it('produces different outputs with varying temperatures', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('')
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+    
+    $prompt = "Write a one-sentence story about a cat.";
+    
+    // Get response with temperature 0 (deterministic)
+    $response1 = $client->completions()->create([
+        'model' => 'grok-2-1212',
+        'prompt' => $prompt,
+        'max_tokens' => 50,
+        'temperature' => 0
+    ]);
+    
+    // Get response with temperature 1 (more random)
+    $response2 = $client->completions()->create([
+        'model' => 'grok-2-1212',
+        'prompt' => $prompt,
+        'max_tokens' => 50,
+        'temperature' => 1
+    ]);
+    
+    // Responses should be different due to temperature difference
+    expect($response1->choices[0]->text)->not->toBe($response2->choices[0]->text);
+});
+
+
+
