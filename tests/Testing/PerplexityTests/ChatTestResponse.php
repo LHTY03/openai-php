@@ -164,3 +164,29 @@ it('responds with tone influenced by system prompt', function () {
 
     expect($response['choices'][0]['message']['content'])->toMatch('/ahoy|matey|yar/i');
 });
+
+
+it('throws an error for invalid model name', function () {
+    $client = Perplexity::factory()->withApiKey('your-key')->make();
+
+    expect(fn () => $client->chat()->create([
+        'model' => 'nonexistent-model-123',
+        'messages' => [['role' => 'user', 'content' => 'Hello']],
+    ]))->toThrow(Exception::class);
+});
+
+
+it('handles multi-turn conversation correctly', function () {
+    $client = Perplexity::factory()->withApiKey('your-key')->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'What is machine learning?'],
+            ['role' => 'assistant', 'content' => 'Machine learning is...'],
+            ['role' => 'user', 'content' => 'Give me examples.'],
+        ]
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toContain('example');
+});
