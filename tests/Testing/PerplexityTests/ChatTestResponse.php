@@ -65,3 +65,54 @@ it('returns context-aware response using web search options and recency filter',
 
     expect($response['choices'][0]['message']['content'])->toContain('AI');
 });
+
+it('handles empty user message gracefully', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => ''],
+        ],
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->not->toBeEmpty();
+});
+
+it('respects max_tokens and truncates output', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Explain the history of the Roman Empire in detail.'],
+        ],
+        'max_tokens' => 20,
+    ]);
+
+    expect(strlen($response['choices'][0]['message']['content']))->toBeLessThan(300); // Approximate check
+});
+
+it('streams a full response in parts', function () {
+    $client = Perplexity::factory()
+        ->withApiKey('your-key')
+        ->make();
+
+    $stream = $client->chat()->createStreamed([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Summarize the theory of relativity.'],
+        ],
+        'stream' => true,
+    ]);
+
+    foreach ($stream as $chunk) {
+        $delta = $chunk->choices[0]->toArray()['delta'];
+        expect($delta['content'])->toBeString();
+        expect($delta['role'])->toBe('assistant');
+    }
+});
