@@ -26,7 +26,8 @@ final class Factory
         'grok' => 'https://api.x.ai/v1',
         'gemini' => 'https://generativelanguage.googleapis.com/v1beta/openai',
         'perplexity' => 'https://api.perplexity.ai',
-        'sonar' => 'https://api.perplexity.ai'
+        'sonar' => 'https://api.perplexity.ai',
+        'claude' => 'https://api.anthropic.com/v1/'
     ];
     
     /**

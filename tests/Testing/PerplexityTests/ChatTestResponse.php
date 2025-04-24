@@ -190,3 +190,17 @@ it('handles multi-turn conversation correctly', function () {
 
     expect($response['choices'][0]['message']['content'])->toContain('example');
 });
+
+
+it('responds correctly to non-English input', function () {
+    $client = Perplexity::factory()->withApiKey('your-key')->make();
+
+    $response = $client->chat()->create([
+        'model' => 'sonar',
+        'messages' => [
+            ['role' => 'user', 'content' => 'こんにちは、調子はどう？'],
+        ]
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toBeString();
+});
