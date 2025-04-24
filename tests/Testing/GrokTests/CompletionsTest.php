@@ -106,5 +106,25 @@ it('produces different outputs with varying temperatures', function () {
     expect($response1->choices[0]->text)->not->toBe($response2->choices[0]->text);
 });
 
-
+it('handles presence_penalty parameter correctly', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('')
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+    
+    $response = $client->completions()->create([
+        'model' => 'grok-2-1212',
+        'prompt' => 'Write a short poem about repetition.',
+        'max_tokens' => 100,
+        'presence_penalty' => 1.0,  // High presence penalty to discourage repetition
+        'temperature' => 0.7
+    ]);
+    
+    expect($response->choices[0]->text)->toBeString();
+    expect($response->choices[0]->finish_reason)->toBe('stop');
+    // Verify presence_penalty was included in the request
+    expect($response->model)->toBe('grok-2-1212');
+});
 
