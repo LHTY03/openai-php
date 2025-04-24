@@ -5,20 +5,22 @@ namespace OpenAI;
 use Exception;
 
 final class MultiProviderClient
-{    
-    private array $clients = []; // Removed nullable `?`
+{
+    private array $clients = [];
+    private array $sessionProviderMap = [];
+    private array $capabilities;
 
-    public function __construct(array $providers)
+    public function __construct(array $providers, array $capabilities)
     {
+        $this->capabilities = $capabilities;
+
         foreach ($providers as $provider => $apiKey) {
-            // Ensure Factory is correctly instantiated
             $tmpClient = (new Factory())
                 ->withApiKey($apiKey)
                 ->withOrganization('')
                 ->withProject('')
                 ->make();
 
-            // Initialize usage tracking
             $usage_map = [
                 'max_tokens' => 0,
                 'tokens_used' => 0,
@@ -29,7 +31,6 @@ final class MultiProviderClient
                 'window_start' => 0
             ];
 
-            // Store client and usage separately
             $this->clients[$provider] = [
                 'client' => $tmpClient,
                 'usage' => $usage_map
@@ -42,54 +43,69 @@ final class MultiProviderClient
         return $this->clients[$provider]['client'] ?? null;
     }
 
-    // Dynamic function calling with unlimited method arguments
-    public function request(string $provider, ...$args)
+    public function requestWithRetry(string $sessionId, string $taskType, string $model, array $callChain, array $params, int $maxRetries = 2)
     {
-        if (!isset($this->clients[$provider])) {
-            throw new Exception("Provider $provider not found.");
+        $primaryProvider = $this->sessionProviderMap[$sessionId] ?? array_key_first($this->capabilities[$taskType]);
+        $providerList = array_keys($this->capabilities[$taskType]);
+
+        foreach ($providerList as $provider) {
+            if (!isset($this->clients[$provider])) continue;
+
+            $usage = $this->clients[$provider]['usage'];
+            if ($usage['tokens_used'] >= 0.9 * $usage['max_tokens'] || $usage['requests_used'] >= 0.9 * $usage['max_requests']) {
+                continue; // skip overloaded provider
+            }
+
+            try {
+                $response = $this->makeChainedCall($provider, $callChain, $params);
+                $this->sessionProviderMap[$sessionId] = $provider;
+                return $response;
+            } catch (Exception $e) {
+                if (!$this->isRetryable($e)) continue;
+                for ($retry = 0; $retry < $maxRetries; $retry++) {
+                    sleep(pow(2, $retry));
+                    try {
+                        return $this->makeChainedCall($provider, $callChain, $params);
+                    } catch (Exception $e) {
+                        if ($retry === $maxRetries - 1) break;
+                    }
+                }
+            }
         }
-    
+
+        throw new Exception("All providers failed or are over quota.");
+    }
+
+    private function makeChainedCall(string $provider, array $callChain, array $params)
+    {
         $client = $this->clients[$provider]['client'];
-    
-        // Extract the final parameter set (last argument must be an array)
-        $params = array_pop($args);
-        $final_func = array_pop($args);
-    
-        // Dynamically call chained functions, except for the last one
-        foreach ($args as $index => $method) {
-            if (!method_exists($client, $method)) {
-                throw new Exception("Method $method does not exist in provider $provider.");
-            }
-    
-            // If this is the last method in the chain, pass $params as an argument
-            if ($index === array_key_last($args)) {
-                $client = $client->$method($params);
-            } else {
+        foreach ($callChain as $method) {
+            if (method_exists($client, $method)) {
                 $client = $client->$method();
+            } else {
+                throw new Exception("Method $method not found for provider $provider");
             }
         }
 
-        // Final function call with parameters
-        $response = $client->$final_func($params);
+        $response = $client->create($params);
 
-        // Extract token usage if available
-        $tokens_used = $response['usage']['total_tokens'] ?? 5;
-        updateUsageStats($provider, $tokens_used);
+        $tokensUsed = $response['usage']['total_tokens'] ?? 5;
+        $this->updateUsageStats($provider, $tokensUsed);
 
         return $response;
     }
 
-    public function getUsageStats(string $provider): array
+    private function isRetryable(Exception $e): bool
     {
-        return $this->clients[$provider]['usage'] ?? null;
+        $message = $e->getMessage();
+        return str_contains($message, 'Timeout') || str_contains($message, '503') || str_contains($message, '502');
     }
-    
+
     private function updateUsageStats(string $provider, int $requestTokens)
     {
         $now = time();
         $usage = &$this->clients[$provider]['usage'];
 
-        // If usage tracking hasn't started yet, start now
         if ($usage['window_start'] === 0) {
             $usage['window_start'] = $now;
             return;
@@ -98,7 +114,6 @@ final class MultiProviderClient
         $elapsed = $now - $usage['window_start'];
 
         if ($elapsed >= 60) {
-            // Update max if a new high was reached in the last window
             if ($usage['tokens_used'] > $usage['max_tokens']) {
                 $usage['max_tokens'] = $usage['tokens_used'];
             }
@@ -107,15 +122,17 @@ final class MultiProviderClient
                 $usage['max_requests'] = $usage['requests_used'];
             }
 
-            // Reset for next window
             $usage['tokens_used'] = 0;
             $usage['requests_used'] = 0;
             $usage['window_start'] = $now;
         }
-        
+
         $usage['tokens_used'] += $requestTokens;
         $usage['requests_used'] += 1;
     }
 
-    
+    public function getUsageStats(string $provider): array
+    {
+        return $this->clients[$provider]['usage'] ?? [];
+    }
 }
