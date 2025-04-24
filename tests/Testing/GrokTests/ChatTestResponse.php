@@ -191,3 +191,25 @@ it('returns chat completion with a tool call', function () {
     expect($response->usage->totalTokens)->toBeInt(); // 100
     
 });
+
+it('returns a response using think_mode reasoning', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('your-key')
+        ->withOrganization('brainiest-testing')
+        ->withProvider('grok')
+        ->withProject('brainiest-testing')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'grok-2-latest',
+        'messages' => [
+            ['role' => 'user', 'content' => 'What are the long-term economic impacts of AI on developing countries?'],
+        ],
+        'extra_headers' => [
+            'xai:reasoning_mode' => 'think_mode'
+        ]
+    ]);
+
+    expect($response['choices'][0]['message']['role'])->toBe('assistant');
+    expect($response['choices'][0]['message']['content'])->not->toBeEmpty();
+});
