@@ -138,3 +138,85 @@ it('ignores unsupported OpenAI fields without failing', function () {
 
     expect($response['choices'][0]['message']['content'])->toBeString();
 });
+
+it('ignores tool_choice parameter with no error', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('sk-ant-your-key')
+        ->withProvider('claude')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'claude-3-sonnet-20240229',
+        'messages' => [['role' => 'user', 'content' => 'What’s the weather like in Paris?']],
+        'tool_choice' => ['type' => 'function', 'function' => ['name' => 'get_weather']]
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toBeString();
+});
+
+
+it('returns only one choice when streaming with n > 1', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('sk-ant-your-key')
+        ->withProvider('claude')
+        ->make();
+
+    $stream = $client->chat()->createStreamed([
+        'model' => 'claude-3-haiku-20240307',
+        'messages' => [['role' => 'user', 'content' => 'Give me a haiku about clouds.']],
+        'stream' => true,
+        'n' => 2
+    ]);
+
+    foreach ($stream as $chunk) {
+        $delta = $chunk->choices[0]->toArray()['delta'];
+        expect($delta['content'])->toBeString();
+    }
+});
+
+it('respects stop sequence to truncate Claude output', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('sk-ant-your-key')
+        ->withProvider('claude')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'claude-3-opus-20240229',
+        'messages' => [['role' => 'user', 'content' => 'Finish this sentence: The sky is']],
+        'stop' => ['blue']
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->not()->toContain('blue');
+});
+
+it('returns valid token usage information', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('sk-ant-your-key')
+        ->withProvider('claude')
+        ->make();
+
+    $response = $client->chat()->create([
+        'model' => 'claude-3-sonnet-20240229',
+        'messages' => [['role' => 'user', 'content' => 'Summarize the story of Icarus.']],
+    ]);
+
+    expect($response['usage']['prompt_tokens'])->toBeInt();
+    expect($response['usage']['completion_tokens'])->toBeInt();
+    expect($response['usage']['total_tokens'])->toBeInt();
+});
+
+it('handles long multilingual prompt gracefully', function () {
+    $client = OpenAI::factory()
+        ->withApiKey('sk-ant-your-key')
+        ->withProvider('claude')
+        ->make();
+
+    $content = 'Hello! Bonjour! こんにちは！Can you describe the Eiffel Tower in each language?';
+
+    $response = $client->chat()->create([
+        'model' => 'claude-3-opus-20240229',
+        'messages' => [['role' => 'user', 'content' => $content]],
+    ]);
+
+    expect($response['choices'][0]['message']['content'])->toContain('Eiffel');
+});
